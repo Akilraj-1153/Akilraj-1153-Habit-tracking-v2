@@ -117,8 +117,8 @@ function LoginPage({ setIsLoggedIn }) {
   }, [setIsLoggedIn, navigate]);
 
   return (
-    <div className="flex justify-center text-black items-center h-screen bg-gray-100">
-      <div className="Login__container bg-gray-900/60 rounded-3xl h-[80%] w-[60%] flex flex-col justify-center items-center ">
+    <div className="flex justify-center text-black items-center h-screen bg-Home bg-no-repeate bg-contain bg-gray-100">
+      <div className="Login__container border-2 border-black bg-white/100 rounded-3xl h-[80%] w-[60%] flex flex-col justify-center items-center ">
         <h2 className="text-4xl mb-4  ">PERSONAL GROWTH AND HABIT TRACKER</h2>
 
         <div className="flex h-[80%] w-[100%] justify-center items-center">
@@ -155,7 +155,7 @@ function LoginPage({ setIsLoggedIn }) {
               className="mb-2 w-2/4 p-2 border border-gray-300 rounded"
             />
             {signupError && <p style={{ color: 'red' }}>{signupError}</p>}
-            <button onClick={handleSignup} className="bg-blue-500 w-1/4 p-2 rounded hover:bg-blue-600">
+            <button onClick={handleSignup} className="bg-blue-500/60 w-1/4 p-2 rounded hover:bg-blue-600">
               Signup
             </button>
           </div>
@@ -175,7 +175,7 @@ function LoginPage({ setIsLoggedIn }) {
               className="mb-2 p-2 border border-gray-300 rounded"
             />
             {loginError && <p style={{ color: 'red' }}>{loginError}</p>}
-            <button onClick={handleLogin} className="bg-blue-500  p-2 rounded hover:bg-blue-600">
+            <button onClick={handleLogin} className="bg-blue-500/60  p-2 rounded hover:bg-blue-600">
               Login
             </button>
           </div>

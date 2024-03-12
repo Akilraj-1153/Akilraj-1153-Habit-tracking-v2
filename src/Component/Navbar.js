@@ -36,7 +36,7 @@ const Navbar = () => {
                     <div className="w-fit h-full flex items-center p-1 overflow-hidden justify-center">
                         <NavLink to="/" className='flex justify-center items-center'>
                             <img src={require('../Assets/logo.png')} alt="logo" className="w-16 h-16 "/>
-                            <h1 className=" text-sm sm:text-lg">Progressive Growth and Habit Tracking</h1>
+                            <h1 className=" text-sm sm:text-lg">Personal Growth and Habit Tracking</h1>
                         </NavLink>
                     </div>
 
