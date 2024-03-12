@@ -126,14 +126,6 @@ const HabitStatus = () => {
               Save
             </button>
           </div>
-          // <div>
-          //   <button
-          //     onClick={restoreUserData}
-          //     className="bg-green-400 hover:bg-green-500 float-right p-1 rounded text-white"
-          //   >
-          //     Restore My Data
-          //   </button>
-          // </div>
         </div>
       </nav>
       <div className="w-full h-full mt-1 p-1 rounded flex flex-col bg-fixed overflow-scroll">
