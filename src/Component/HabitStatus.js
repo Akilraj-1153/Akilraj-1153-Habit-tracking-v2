@@ -126,6 +126,7 @@ const HabitStatus = () => {
               Save
             </button>
           </div>
+<<<<<<< HEAD
           {/* <div>
             <button
               onClick={restoreUserData}
@@ -134,6 +135,8 @@ const HabitStatus = () => {
               Restore My Data
             </button>
           </div> */}
+=======
+>>>>>>> 161a1e6d377ba3bd02dc8ab93d5688840a858d06
         </div>
       </nav>
       <div className="w-full h-full mt-1 p-1 rounded flex flex-col bg-fixed overflow-scroll">
