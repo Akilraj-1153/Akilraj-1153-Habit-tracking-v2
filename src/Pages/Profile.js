@@ -1,67 +1,30 @@
-// Profile.js
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Bar } from 'react-chartjs-2';
 import { CategoryScale, LinearScale, BarElement, Chart } from 'chart.js';
-
-// Import other necessary components, hooks, and styles as needed
+import { habitSelector, quoteFetchThunk } from '../Redux/Reducer/habitReducer';
+import 'chartjs-adapter-date-fns';
+import {  getUserDetails } from '../Data/Connection';
 
 Chart.register(CategoryScale, LinearScale, BarElement);
-
-
 
 const Profile = ({ setIsLoggedIn }) => {
   const [userDetails, setUserDetails] = useState({});
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Assuming habitSelector and other necessary selectors are correctly defined in the Redux slice
-  const habitSelector = useSelector((state) => state.habit);
-  const { habits, showStatus } = habitSelector || {}; // Ensure habits and showStatus are defined
+  const { habits } = useSelector(habitSelector);
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      try {
-        const loginCredentials = JSON.parse(localStorage.getItem('loginCredentials')) || {};
-        const username = loginCredentials.username;
-        const password = loginCredentials.password;
-
-        if (username && password) {
-          console.log('Fetching user details...');
-
-          const response = await fetch(`http://localhost:3000/api/getUserDetails/${username}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (!response.ok) {
-            console.error(`Error fetching user details: ${response.statusText}`);
-            throw new Error(`Error fetching user details: ${response.statusText}`);
-          }
-
-          console.log('User details successfully fetched.');
-
-          const data = await response.json();
-
-          if (data.success) {
-            console.log('User details:', data.user);
-            setUserDetails(data.user);
-          } else {
-            console.error('Error fetching user details:', data.error);
-          }
-        } else {
-          console.error('Username or password not found.');
-        }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      }
-    };
-
-    fetchUserDetails();
-  }, []);
+    const loggedInUser = JSON.parse(localStorage.getItem('loginCredentials'));
+    if (loggedInUser) {
+      getUserDetails(loggedInUser.username)
+        .then((user) => setUserDetails(user))
+        .catch((error) => console.error('Error fetching user details:', error));
+    }
+    dispatch(quoteFetchThunk());
+  }, [dispatch]);
 
   const handleLogout = () => {
     localStorage.removeItem('loginCredentials');
@@ -69,10 +32,7 @@ const Profile = ({ setIsLoggedIn }) => {
     navigate('/');
   };
 
-  // Check if habits is defined before destructuring
   const daysCompletedData = habits ? habits.map((habit) => habit.completedDays) : [];
-
-  // Bar chart data
   const data = {
     labels: habits ? habits.map((habit) => habit.name) : [],
     datasets: [
@@ -88,8 +48,9 @@ const Profile = ({ setIsLoggedIn }) => {
     ],
   };
 
-  // Extract user details from state
   const { profilePicture, fullName, username, email } = userDetails || {};
+
+
 
   return (
     <div className='flex justify-center items-center h-screen bg-gray-100'>
@@ -112,7 +73,7 @@ const Profile = ({ setIsLoggedIn }) => {
             Logout
           </button>
         </div>
-
+        
         <div className='w-3/4 h-full'>
           <div className="chart-container p-4 rounded-3xl" style={{ position: 'relative', height: '70vh', width: '100%' }}>
             <h3 className='text-center text-2xl font-bold text-black'>Habit Tracking Progress:</h3>
@@ -121,21 +82,15 @@ const Profile = ({ setIsLoggedIn }) => {
               options={{
                 maintainAspectRatio: false,
                 scales: {
-                  yAxes: [
-                    {
-                      ticks: {
-                        beginAtZero: true,
-                        min: 0,
-                      },
+                  y: {
+                    beginAtZero: true,
+                  },
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Habit Names',
                     },
-                  ],
-                  xAxes: [
-                    {
-                      ticks: {
-                        autoSkip: false,
-                      },
-                    },
-                  ],
+                  },
                 },
               }}
             />

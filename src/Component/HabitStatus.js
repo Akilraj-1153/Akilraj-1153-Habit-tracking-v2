@@ -1,15 +1,12 @@
+// File: 'yourComponentFile.js' (replace with the actual file name)
+
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
-import {
-  habitSelector,
-  setShowStatus,
-  toggleHabitStatus,
-  setUserHabits,
-} from '../Redux/Reducer/habitReducer';
+import { habitSelector, setShowStatus, toggleHabitStatus,quoteFetchThunk } from '../Redux/Reducer/habitReducer';
 import WeekStatus from './WeekStatus';
 import { toast } from 'react-toastify';
+import { saveUserHabits } from '../Data/Connection';
 
 const CalculateDayOfWeek = (date) => {
   var days = new Array();
@@ -22,28 +19,13 @@ const CalculateDayOfWeek = (date) => {
 
 const HabitStatus = () => {
   const dispatch = useDispatch();
-  const { habits, showStatus } = useSelector(habitSelector);
+  const { habits, showStatus, username } = useSelector(habitSelector);
   const weekDays = CalculateDayOfWeek(new Date());
   const [isSaving, setIsSaving] = useState(false);
-  const [fetchedUsername, setFetchedUsername] = useState('');
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/getUserDetails');
-
-        if (response.data.success) {
-          dispatch(setUserHabits(response.data.user.habits));
-          setFetchedUsername(response.data.user.username); // Set the fetched username
-        } else {
-          console.error('Failed to fetch user details:', response.data.error);
-        }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      }
-    };
-
-    fetchUserData();
+    // Fetch user details, including the username
+    dispatch(quoteFetchThunk());
   }, [dispatch]);
 
   const handleCloseClick = (e) => {
@@ -59,52 +41,29 @@ const HabitStatus = () => {
     }
   };
 
-  const saveUserDetails = async () => {
+  const handleSaveClick = async () => {
     try {
       setIsSaving(true);
-
-      const response = await axios.post('http://localhost:3000/api/saveUserDetails', {
-        username: fetchedUsername, // Use the fetched username
-        habits: habits.map((habit) => ({
-          name: habit.name,
-          completedDays: habit.completedDays,
-          createdOn: habit.createdOn,
-          url: habit.url,
-          weekStatus: habit.weekStatus,
-        })),
-      });
-
-      if (response.data.success) {
-        console.log('User details saved successfully:', response.data.user);
-        toast.success('User details saved successfully!');
+  
+      const success = await saveUserHabits(username, habits);
+  
+      if (success) {
+        // Update habits in local state to reflect changes (optional)
+        // setHabits(habits); // Assuming habits state exists
+  
+        toast.success('Habits saved successfully!');
       } else {
-        console.error('Failed to save user details:', response.data.error);
-        toast.error('Failed to save user details');
+        throw new Error('Failed to save habits');
       }
     } catch (error) {
-      console.error('Error saving user details:', error);
-      toast.error('Error saving user details');
+      console.error('Error saving habits:', error);
+      toast.error('Failed to save habits. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const restoreUserData = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/api/getUserDetails'); // Adjust the API endpoint accordingly
-
-      if (response.data.success) {
-        dispatch(setUserHabits(response.data.user.habits));
-        toast.success('User data restored successfully!');
-      } else {
-        console.error('Failed to restore user data:', response.data.error);
-        toast.error('Failed to restore user data');
-      }
-    } catch (error) {
-      console.error('Error restoring user data:', error);
-      toast.error('Error restoring user data');
-    }
-  };
+  
 
 
   return (
@@ -120,23 +79,13 @@ const HabitStatus = () => {
           </div>
           <div>
             <button
-              onClick={saveUserDetails}
-              className={`bg-indigo-400 hover:bg-indigo-500 float-right p-1 rounded text-white ${
-                isSaving ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className="bg-indigo-400 hover:bg-indigo-500 float-right p-1 rounded text-white"
+              onClick={handleSaveClick}
+              disabled={isSaving}
             >
               Save
             </button>
           </div>
-
-          {/* <div>
-            <button
-              onClick={restoreUserData}
-              className="bg-green-400 hover:bg-green-500 float-right p-1 rounded text-white"
-            >
-              Restore My Data
-            </button>
-          </div> */}
         </div>
       </nav>
       <div className="w-full h-full mt-1 p-1 rounded flex flex-col bg-fixed overflow-scroll">

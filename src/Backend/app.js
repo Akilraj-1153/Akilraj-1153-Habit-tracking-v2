@@ -3,12 +3,13 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const { handleSignup, handleLogin } = require('../Data/Connection'); // Update the path accordingly
 
 const app = express();
 app.use(cors());
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect('mongodb://localhost:27017/Login_Test', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://localhost:27017/Habit-test', { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -18,20 +19,23 @@ const userSchema = new mongoose.Schema({
   fullName: String,
   email: String,
   password: String,
-  habits: [{
-    name: String,
-    completedDays: Number,
-    createdOn: String,
-    url: String,
-    weekStatus: [Boolean],
-  }],
+  habits: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Habit' }],
+});
+
+const habitSchema = new mongoose.Schema({
+  name: String,
+  completedDays: Number,
+  createdOn: String,
+  url: String,
+  weekStatus: [Boolean],
 });
 
 const User = mongoose.model('User', userSchema);
+const Habit = mongoose.model('Habit', habitSchema);
 
 app.post('/signup', async (req, res) => {
   try {
-    const { username, fullName, email, password, habits } = req.body;
+    const { username, fullName, email, password } = req.body;
 
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
@@ -44,15 +48,32 @@ app.post('/signup', async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      habits: habits || [],
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: 'User created successfully', user: newUser });
+    const userData = await User.findOne({ username });
+    res.status(201).json({ message: 'User created successfully', user: userData });
   } catch (error) {
     console.error('Signup Error:', error);
     res.status(500).json({ error: 'Internal Server Error during signup' });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = await handleLogin({ username, password }, res);
+
+    if (user) {
+      res.json({ success: true, user });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid username or password' });
+    }
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ error: 'Internal Server Error during login' });
   }
 });
 
@@ -60,9 +81,11 @@ app.post('/api/saveUserDetails', async (req, res) => {
   try {
     const { username, habits } = req.body;
 
+    const habitObjects = await Habit.create(habits);
+
     const user = await User.findOneAndUpdate(
       { username },
-      { $set: { habits } },
+      { $set: { habits: habitObjects.map(habit => habit._id) } },
       { new: true }
     );
 
@@ -77,7 +100,7 @@ app.get('/api/getUserDetails/:username', async (req, res) => {
   try {
     const { username } = req.params;
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username }).populate('habits');
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });

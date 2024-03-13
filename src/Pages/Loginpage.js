@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { handleSignup, handleLogin } from '../Data/Connection'; // Update the path accordingly
 
 function LoginPage({ setIsLoggedIn }) {
   const navigate = useNavigate();
@@ -17,96 +18,6 @@ function LoginPage({ setIsLoggedIn }) {
   const [userData, setUserData] = useState(null);
   const [signupError, setSignupError] = useState('');
   const [loginError, setLoginError] = useState('');
-
-  const handleSignup = async () => {
-    if (signupPassword !== signupConfirmPassword) {
-      setSignupError('Passwords do not match');
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:3000/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: signupUsername,
-          fullName: signupFullName,
-          email: signupEmail,
-          password: signupPassword,
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Server Not Found');
-        } else {
-          throw new Error('Failed to fetch data');
-        }
-      }
-
-      const data = await response.json();
-
-      localStorage.setItem('loginCredentials', JSON.stringify(data.user));
-
-      setSignupError('');
-      setUserData(data.user);
-
-      toast.success('Signup successful!');
-      navigate('/');
-    } catch (error) {
-      console.error('Error during signup:', error);
-
-      if (error.message === 'Server Not Found') {
-        setSignupError('Server Not Found. Please try again later.');
-      } else {
-        setSignupError('Error during signup. Please try again.');
-      }
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Server Not Found');
-        } else {
-          throw new Error('Failed to fetch data');
-        }
-      }
-
-      if (response.status === 401) {
-        setLoginError('Invalid username or password');
-        return;
-      }
-
-      const data = await response.json();
-
-      localStorage.setItem('loginCredentials', JSON.stringify(data.user));
-
-      setUserData(data.user);
-      toast.success('Login successful!');
-
-      setIsLoggedIn(true);
-    } catch (error) {
-      console.error('Error during login:', error);
-
-      if (error.message === 'Server Not Found') {
-        setLoginError('Server Not Found. Please try again later.');
-      } else {
-        setLoginError('Error during login. Please try again.');
-      }
-    }
-  };
 
   useEffect(() => {
     const loginCredentials = JSON.parse(localStorage.getItem('loginCredentials'));
@@ -154,8 +65,21 @@ function LoginPage({ setIsLoggedIn }) {
               onChange={(e) => setSignupConfirmPassword(e.target.value)}
               className="mb-2 w-2/4 p-2 border border-gray-300 rounded"
             />
+            
             {signupError && <p style={{ color: 'red' }}>{signupError}</p>}
-            <button onClick={handleSignup} className="bg-blue-500/60 w-1/4 p-2 rounded hover:bg-blue-600">
+            <button onClick={() => handleSignup({
+              username: signupUsername,
+              fullName: signupFullName,
+              email: signupEmail,
+              password: signupPassword,
+              confirmPassword: signupConfirmPassword
+            },
+              setSignupError,
+              setUserData,
+              toast,
+              navigate,
+              setIsLoggedIn
+            )} className="bg-blue-500/60 w-1/4 p-2 rounded hover:bg-blue-600">
               Signup
             </button>
           </div>
@@ -174,8 +98,17 @@ function LoginPage({ setIsLoggedIn }) {
               onChange={(e) => setLoginPassword(e.target.value)}
               className="mb-2 p-2 border border-gray-300 rounded"
             />
+
             {loginError && <p style={{ color: 'red' }}>{loginError}</p>}
-            <button onClick={handleLogin} className="bg-blue-500/60  p-2 rounded hover:bg-blue-600">
+            <button onClick={() => handleLogin({
+              username: loginUsername,
+              password: loginPassword
+            },
+              setLoginError,
+              setUserData,
+              toast,
+              setIsLoggedIn
+            )} className="bg-blue-500/60  p-2 rounded hover:bg-blue-600">
               Login
             </button>
           </div>

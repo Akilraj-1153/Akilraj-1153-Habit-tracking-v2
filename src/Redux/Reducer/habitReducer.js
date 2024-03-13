@@ -9,35 +9,46 @@ const initialState = {
   displayImageUrl: '',
 };
 
+// export const quoteFetchThunk = createAsyncThunk('quotes', async () => {
+//   try {
+//     const [quotesResponse, habitsResponse] = await Promise.all([
+//       fetch('https://type.fit/api/quotes'),
+//       fetch('/api/getUserDetails/:username'),
+//     ]);
+
+//     const [quotesData, habitsData] = await Promise.all([
+//       quotesResponse.json(),
+//       habitsResponse.json(),
+//     ]);
+
+//     return { quotes: quotesData, habits: habitsData.user.habits };
+//   } catch (error) {
+//     console.error('Error fetching quotes and habits:', error);
+//     throw error;
+//   }
+// });
+
 export const quoteFetchThunk = createAsyncThunk('quotes', async () => {
   try {
-    const [quotesResponse, habitsResponse] = await Promise.all([
+    const [quotesResponse, userDetailsResponse] = await Promise.all([
       fetch('https://type.fit/api/quotes'),
-      fetch('/api/getUserDetails/:username'), // Replace with the correct endpoint
+      fetch('/api/getUserDetails/:username'), // Update the endpoint with the correct route
     ]);
 
-    const [quotesData, habitsData] = await Promise.all([
+    const [quotesData, userDetailsData] = await Promise.all([
       quotesResponse.json(),
-      habitsResponse.json(),
+      userDetailsResponse.json(),
     ]);
 
-    return { quotes: quotesData, habits: habitsData.user.habits };
+    const username = userDetailsData.user.username;
+
+    return { quotes: quotesData, habits: userDetailsData.user.habits, username };
   } catch (error) {
     console.error('Error fetching quotes and habits:', error);
     throw error;
   }
 });
 
-export const setUserHabits = (habits) => ({
-  type: 'SET_USER_HABITS',
-  payload: habits,
-});
-
-const additionalReducer = (state, action) => {
-  if (action.type === 'SET_USER_HABITS') {
-    state.habits = action.payload;
-  }
-};
 
 const habitSlice = createSlice({
   name: 'habitTracker',
@@ -46,6 +57,12 @@ const habitSlice = createSlice({
     addHabit: (state, action) => {
       state.habits = [...state.habits, action.payload];
       state.showStatus = null;
+    },
+    extraReducers: (builder) => {
+      builder.addCase(quoteFetchThunk.fulfilled, (state, action) => {
+        state.username = action.payload.username;
+        state.habits = action.payload.habits;
+      });
     },
     setSuggestionSelected: (state, action) => {
       state.suggestionSelected = action.payload;
@@ -93,21 +110,6 @@ const habitSlice = createSlice({
         state.showStatus = null;
       }
     },
-  },
-  extraReducers: (builder) => {
-    builder.addCase(quoteFetchThunk.fulfilled, (state, action) => {
-      const { quotes, habits } = action.payload;
-
-      const index = Math.trunc(Math.random() * quotes.length);
-      state.quote = { ...quotes[index] };
-
-      state.habits = habits;
-
-      const displayImageIndex = Math.trunc(Math.random() * DisplayImage.length);
-      state.displayImageUrl = DisplayImage[displayImageIndex].url;
-    });
-
-    builder.addCase('SET_USER_HABITS', additionalReducer);
   },
 });
 

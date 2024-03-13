@@ -7,7 +7,7 @@ import { Error } from "./Pages/Error";
 import Home from "./Pages/Home";
 import Bmi from "./Pages/Bmi";
 import Profile from "./Pages/Profile";
-import LoginPage from "./Pages/Loginpage";
+import LoginPage from "./Pages/LoginPage";
 
 function App() {
   // Check the initial isLoggedIn state from localStorage
