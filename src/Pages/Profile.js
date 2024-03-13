@@ -1,37 +1,67 @@
+// Profile.js
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Bar } from 'react-chartjs-2';
 import { CategoryScale, LinearScale, BarElement, Chart } from 'chart.js';
-import { habitSelector, setShowStatus, toggleHabitStatus } from '../Redux/Reducer/habitReducer';
+
+// Import other necessary components, hooks, and styles as needed
 
 Chart.register(CategoryScale, LinearScale, BarElement);
 
-const Profile = ({ setIsLoggedIn }) => {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+// Move the export statement to the top level
 
-  const { habits, showStatus } = useSelector(habitSelector);
+
+const Profile = ({ setIsLoggedIn }) => {
+  const [userDetails, setUserDetails] = useState({});
+  const navigate = useNavigate();
+
+  // Assuming habitSelector and other necessary selectors are correctly defined in the Redux slice
+  const habitSelector = useSelector((state) => state.habit);
+  const { habits, showStatus } = habitSelector || {}; // Ensure habits and showStatus are defined
 
   useEffect(() => {
-    try {
-      const loginCredentials = JSON.parse(localStorage.getItem('loginCredentials')) || {};
-      const fullNameFromCredentials = loginCredentials.fullName;
-      const emailFromCredentials = loginCredentials.email;
-      const usernameFromCredentials = loginCredentials.username;
-      const profilePictureFromCredentials = loginCredentials.profilePicture;
+    const fetchUserDetails = async () => {
+      try {
+        const loginCredentials = JSON.parse(localStorage.getItem('loginCredentials')) || {};
+        const username = loginCredentials.username;
+        const password = loginCredentials.password;
 
-      setFullName(fullNameFromCredentials);
-      setEmail(emailFromCredentials);
-      setUsername(usernameFromCredentials);
-      setProfilePicture(profilePictureFromCredentials);
-    } catch (error) {
-      console.error('Error fetching or setting user credentials:', error);
-    }
+        if (username && password) {
+          console.log('Fetching user details...');
+
+          const response = await fetch(`http://localhost:3000/api/getUserDetails/${username}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            console.error(`Error fetching user details: ${response.statusText}`);
+            throw new Error(`Error fetching user details: ${response.statusText}`);
+          }
+
+          console.log('User details successfully fetched.');
+
+          const data = await response.json();
+
+          if (data.success) {
+            console.log('User details:', data.user);
+            setUserDetails(data.user);
+          } else {
+            console.error('Error fetching user details:', data.error);
+          }
+        } else {
+          console.error('Username or password not found.');
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
   }, []);
 
   const handleLogout = () => {
@@ -40,12 +70,12 @@ const Profile = ({ setIsLoggedIn }) => {
     navigate('/');
   };
 
-  // Calculate the number of days completed for each habit
-  const daysCompletedData = habits.map(habit => habit.completedDays);
+  // Check if habits is defined before destructuring
+  const daysCompletedData = habits ? habits.map((habit) => habit.completedDays) : [];
 
   // Bar chart data
   const data = {
-    labels: habits.map(habit => habit.name),
+    labels: habits ? habits.map((habit) => habit.name) : [],
     datasets: [
       {
         label: 'Days Completed',
@@ -58,6 +88,9 @@ const Profile = ({ setIsLoggedIn }) => {
       },
     ],
   };
+
+  // Extract user details from state
+  const { profilePicture, fullName, username, email } = userDetails || {};
 
   return (
     <div className='flex justify-center items-center h-screen bg-gray-100'>

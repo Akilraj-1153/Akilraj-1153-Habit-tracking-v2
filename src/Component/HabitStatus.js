@@ -25,14 +25,16 @@ const HabitStatus = () => {
   const { habits, showStatus } = useSelector(habitSelector);
   const weekDays = CalculateDayOfWeek(new Date());
   const [isSaving, setIsSaving] = useState(false);
+  const [fetchedUsername, setFetchedUsername] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/getUserDetails'); // Adjust the API endpoint accordingly
+        const response = await axios.get('http://localhost:3000/api/getUserDetails');
 
         if (response.data.success) {
           dispatch(setUserHabits(response.data.user.habits));
+          setFetchedUsername(response.data.user.username); // Set the fetched username
         } else {
           console.error('Failed to fetch user details:', response.data.error);
         }
@@ -62,7 +64,7 @@ const HabitStatus = () => {
       setIsSaving(true);
 
       const response = await axios.post('http://localhost:3000/api/saveUserDetails', {
-        username: 'YourUsername',
+        username: fetchedUsername, // Use the fetched username
         habits: habits.map((habit) => ({
           name: habit.name,
           completedDays: habit.completedDays,
@@ -126,7 +128,7 @@ const HabitStatus = () => {
               Save
             </button>
           </div>
-<<<<<<< HEAD
+
           {/* <div>
             <button
               onClick={restoreUserData}
@@ -135,8 +137,6 @@ const HabitStatus = () => {
               Restore My Data
             </button>
           </div> */}
-=======
->>>>>>> 161a1e6d377ba3bd02dc8ab93d5688840a858d06
         </div>
       </nav>
       <div className="w-full h-full mt-1 p-1 rounded flex flex-col bg-fixed overflow-scroll">
