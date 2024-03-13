@@ -10,7 +10,6 @@ import { CategoryScale, LinearScale, BarElement, Chart } from 'chart.js';
 
 Chart.register(CategoryScale, LinearScale, BarElement);
 
-// Move the export statement to the top level
 
 
 const Profile = ({ setIsLoggedIn }) => {
