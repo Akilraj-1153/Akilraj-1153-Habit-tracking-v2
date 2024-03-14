@@ -1,3 +1,5 @@
+// Connection.js
+
 const handleSignup = async (signupData, setSignupError, setUserData, toast, navigate, setIsLoggedIn) => {
   if (signupData.password !== signupData.confirmPassword) {
     setSignupError('Passwords do not match');
@@ -28,10 +30,13 @@ const handleSignup = async (signupData, setSignupError, setUserData, toast, navi
 
     const data = await response.json();
 
-    localStorage.setItem('loginCredentials', JSON.stringify(data.user));
+    // Fetch user details, including habit status
+    const userDetails = await getUserDetails(data.user.username);
 
+    localStorage.setItem('loginCredentials', JSON.stringify(userDetails));
+    
     setSignupError('');
-    setUserData(data.user);
+    setUserData(userDetails);
 
     toast.success('Signup successful!');
     navigate('/');
@@ -71,14 +76,17 @@ const handleLogin = async (loginData, setLoginError, setUserData, toast, setIsLo
 
     const data = await response.json();
 
-    localStorage.setItem('loginCredentials', JSON.stringify(data.user));
+    // Fetch user details, including habit status
+    const userDetails = await getUserDetails(data.user.username);
 
-    setUserData(data.user);
+    localStorage.setItem('loginCredentials', JSON.stringify(userDetails));
+
+    setUserData(userDetails);
     toast.success('Login successful!');
 
     setIsLoggedIn(true);
 
-    return data.user; // Return user data after successful login
+    return userDetails; // Return user details after successful login
   } catch (error) {
     console.error('Error during login:', error);
 
@@ -127,5 +135,4 @@ const saveUserHabits = async (username, habits) => {
   }
 };
 
-
-module.exports = { handleSignup, handleLogin, getUserDetails,saveUserHabits };
+module.exports = { handleSignup, handleLogin, getUserDetails, saveUserHabits };
